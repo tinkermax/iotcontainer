@@ -1,2 +1,2 @@
 # iotcontainer
-Iot Container makes shopping easier https://yeomanblog.wordpress.com/?p=1525&amp;preview=true
+Iot Container makes shopping easier http://tinker.yeoman.com.au/2016/07/24/iot-container
