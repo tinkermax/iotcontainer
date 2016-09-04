@@ -24,6 +24,10 @@ extern "C" {
 #include "user_interface.h" //***********
 }
 
+#define DEBUG false
+//Comment out the following line to allow debugging info on serial monitor
+#define Serial if(DEBUG)Serial
+
 //Set Container ID
 #define ContainerID "1" //Change this to be unique for each container!
 #define mqttContainer "tinkermax/f/smartcontainer" ContainerID
@@ -35,7 +39,7 @@ extern "C" {
 #define sensorDataWindow 3 //Number of rolling data points for noise rejection
 #define RTC_MAGIC 0x75a78fc5
 #define BATT_FULL 2812
-#define BATT_CUTOFF 2266
+#define BATT_CUTOFF 2280
 
 //Specify container weight
 //my units are grams (g), but any unit can be used by adjusting the scaleCalibration constant
@@ -118,6 +122,7 @@ void setup() {
     Serial.println(WiFi.localIP());
 
     //Initialise OTA in case there is a software upgrade
+    ArduinoOTA.setHostname("Container");
     ArduinoOTA.onStart([]() {
       Serial.println("Start");
     });
@@ -285,8 +290,8 @@ void setup() {
   system_rtc_mem_write(64, &RTCvar, sizeof(RTCvar));
   delay(1);
   
-  //Sleep for 15 minutes
-  ESP.deepSleep(15 * 60 * 1000000, WAKE_RF_DEFAULT);
+  //Sleep for 60 minutes
+  ESP.deepSleep(60 * 60 * 1000000, WAKE_RF_DEFAULT);
   delay(500);
 
 }
@@ -344,5 +349,3 @@ int sendSms(char *messageToSend) {
 
 void loop() {
 }
-
-
