@@ -16,7 +16,7 @@
 #include <Wire.h>
 #include <HX711.h>
 #include <math.h>
-#include <ESP8266HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include "Config.h"
 
 // Include API-Headers
@@ -266,7 +266,7 @@ void setup() {
         //Only send one battery warning
         if (battlevel <= BATT_CUTOFF) {
           sprintf(buffer, "Please replace Greek yoghurt battery - only %s%% charge left", battlevel_str);
-          if (sendSms(buffer) > 0) {
+          if (sendNotification(buffer) > 0) {
             battwarningsent = true;
           }
         }
@@ -274,7 +274,7 @@ void setup() {
         //Only send one replenishment warning
         if (weight <= (containerAlertWeight + containerEmptyWeight) && weightwarningsent == false) {
           sprintf(buffer, "Please replenish Greek yoghurt - only %s%% remaining", weight_str);
-          if (sendSms(buffer) > 0) {
+          if (sendNotification(buffer) > 0) {
             weightwarningsent = true;
           }
         }
@@ -317,34 +317,50 @@ boolean reconnect() {
   return false;
 }
 
-int sendSms(char *messageToSend) {
-  char buffer[100]; //buffer for the storing the sprintf outputs
-
-  Serial.println("making POST request to ifttt for sending sms..\n");
-
-  HTTPClient http;
-
-  http.begin(iftttMakerUrl, "A9 81 E1 35 B3 7F 81 B9 87 9D 11 DD 48 55 43 2C 8F C3 EC 87");
-
-  http.addHeader("content-type", "application/json");
-  sprintf(buffer, "{\"value1\":\"%s\"}", messageToSend);
-  Serial.println(buffer);
-  int result = http.POST(buffer);
-
-  Serial.println(String("status code: " + result).c_str());
-
-  if(result > 0) {
-    Serial.println("body:\r\n");
-    Serial.println((http.getString() + "\r\n").c_str());
-  } else{
-    Serial.println("FAILED. error:");
-  Serial.println((http.errorToString(result) + "\n").c_str());
-    Serial.println("body:\r\n");
-    Serial.println((http.getString() + "\r\n").c_str());
+int sendNotification(char *messageToSend) {
+  WiFiClientSecure httpspost;
+  char post_rqst[256];
+  char *p = post_rqst;
+  char payload[30];
+  char *json = payload;
+  char jsonlen[2];
+  
+  if (!httpspost.connect("maker.ifttt.com", 443)) {
+    Serial.println("Connection failed");
+    return 0;
   }
 
-  http.end(); 
-  return result; 
+  strcpy(json, "{\"value1\":\"");
+  strcat(json, messageToSend);
+  strcat(json, "\"}");
+  itoa(strlen(json),jsonlen,10);
+
+  strcpy(p, "POST ");
+  strcat(p, iftttMakerUrl);
+  strcat(p, " HTTP/1.1\r\n");
+  strcat(p, "Host: maker.ifttt.com\r\n");
+  strcat(p, "Content-Type: application/json\r\n");
+  strcat(p, "Content-Length: ");
+  strcat(p, jsonlen);
+  strcat(p, "\r\n\r\n");
+  strcat(p, json);
+  strcat(p, "\r\n\r\n");
+  
+  httpspost.print(post_rqst); 
+
+  //Check post was successfully received
+  while (httpspost.connected()) {
+    String line = httpspost.readStringUntil('\n');
+    Serial.println(line);
+    if (line.indexOf("200 OK") > 0) {
+      Serial.println(">>Success!");
+      httpspost.stop(); 
+      return 1;
+    }
+  }
+
+  httpspost.stop(); 
+  return 1; 
 }
 
 void loop() {
