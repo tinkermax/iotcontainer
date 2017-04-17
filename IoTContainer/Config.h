@@ -15,4 +15,4 @@ const char* mqttpwd = "xxx";
 
 //URL containing <Name of your Maker Event> and <Your maker channel key>
 //Note don't include the < and >
-char iftttMakerUrl[] = "https://maker.ifttt.com/trigger/<Name of your Maker Event>/with/key/<Your Maker Channel Key>";
+char iftttMakerUrl[] = "/trigger/<Name of your Maker Event>/with/key/<Your Maker Channel Key>";
