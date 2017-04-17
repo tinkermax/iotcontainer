@@ -45,7 +45,7 @@ extern "C" {
 //my units are grams (g), but any unit can be used by adjusting the scaleCalibration constant
 const float containerEmptyWeight = 93; //Weight of the empty container
 const float containerFullWeight = 2015; //Weight of the contents only (excluding container weight)
-const float containerAlertWeight = 250; //Alert when contents reach this weight (excluding container weight)
+const float containerAlertWeight = 300; //Alert when contents reach this weight (excluding container weight)
 const float scaleCalibration = 231.15; //manually adjust constant to match load cell reading to a known weight
 
 //RTC memory structure
@@ -73,7 +73,7 @@ boolean connectionEstablished;
 //All of the code is in setup, because there is no looping - only deep sleep between cycles
 void setup() {
   boolean waiforOTA = false;
-  char weight_str[20], battlevel_str[20];
+  char weight_str[50], battlevel_str[50];
   
   float weight, maxDeviation;
   int i, readingno, keeptrying;
@@ -265,7 +265,7 @@ void setup() {
         
         //Only send one battery warning
         if (battlevel <= BATT_CUTOFF) {
-          sprintf(buffer, "Please replace Greek yoghurt battery - only %s%% charge left", battlevel_str);
+          sprintf(buffer, "Greek yoghurt battery - %s%% charge", battlevel_str);
           if (sendNotification(buffer) > 0) {
             battwarningsent = true;
           }
@@ -273,7 +273,7 @@ void setup() {
   
         //Only send one replenishment warning
         if (weight <= (containerAlertWeight + containerEmptyWeight) && weightwarningsent == false) {
-          sprintf(buffer, "Please replenish Greek yoghurt - only %s%% remaining", weight_str);
+          sprintf(buffer, "Greek yoghurt - %s%% remaining", weight_str);
           if (sendNotification(buffer) > 0) {
             weightwarningsent = true;
           }
@@ -319,11 +319,11 @@ boolean reconnect() {
 
 int sendNotification(char *messageToSend) {
   WiFiClientSecure httpspost;
-  char post_rqst[256];
+  char post_rqst[255];
   char *p = post_rqst;
-  char payload[30];
+  char payload[50];
   char *json = payload;
-  char jsonlen[2];
+  char jsonlen[3];
   
   if (!httpspost.connect("maker.ifttt.com", 443)) {
     Serial.println("Connection failed");
@@ -365,3 +365,4 @@ int sendNotification(char *messageToSend) {
 
 void loop() {
 }
+
